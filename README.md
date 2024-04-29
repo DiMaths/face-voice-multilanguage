@@ -5,9 +5,6 @@ For more information on challenge please see [evaluation plan](https://arxiv.org
 Baseline code for v2 of MAV-Celeb dataset based on _'Fusion and Orthogonal Projection for Improved Face-Voice Association'_ [{paper}](https://ieeexplore.ieee.org/abstract/document/9747704) [{code}](https://github.com/msaadsaeed/FOP)
 ## Task
 Face-voice association is established in cross-modal verification task. The goal of the cross-modal verification task is to verify if, in a given single sample with both a face and voice, both belong to the same identity. In addition, we analyze the impact of multiple of languages on cross-modal verification task.
-<p align='center'>
-  <img src='https://github.com/mavceleb/mavceleb_baseline/blob/main/images/challenge_task_diag_r.jpg' width=70% height=70%  style="border-radius: 25px">
-</p>
 
 <table border="1" align='center'>
   <tr>
@@ -61,8 +58,8 @@ Face-voice association is established in cross-modal verification task. The goal
 The aim is to study the impact of language on face-voice assoication methods. For this we train a model X on one language (English) then test on same language (English) and unheard language (Hindi). Similarly we train a model Y on one language (Hindi) then test the model on same language (Hindi) and unheard language (English) as shown in figure below. It is also important to note that the test identities are also unheard by the network meaning the test set is disjoint from the train network. For example: v2 has 84 identities both having English and Hindi voice samples. We have separated 6 identities for test set while leverage reamining for training the model.<br>
 
 <p align='center'>
-  <img src='https://github.com/mavceleb/mavceleb_baseline/blob/main/images/eng_heard.JPG' width=40% height=40%>
-  <img src='https://github.com/mavceleb/mavceleb_baseline/blob/main/images/hin_heard.JPG' width=40% height=40%>
+  <img src='./images/eng_heard.JPG' width=40% height=40%>
+  <img src='./images/hin_heard.JPG' width=40% height=40%>
 </p>
 
 
@@ -89,14 +86,7 @@ yx4nfa35 voices/English/01062.wav faces/English/01062.jpg
 bowsaf5e voices/English/01063.wav faces/English/01063.jpg 
 ``` 
 We have kept the ground truth for fair evaluation during FAME challenge. Participants are expected to compute and submit a text file including the `id` and `L2 Scores` in the following format. We also provide `computeScore.py` to generate sample submission score files. Set `ver` and `heard_lang` accordingly and run the script. For example, if `ver='v1'` and `heard_lang='English'`, the script will generate two files in the given format: `sub_scores_v1_English_heard.txt` and `sub_scores_English_unheard.txt`. The heard scores are for `English` test language whereas unheard scores for language that is unheard by the model i.e. `Urdu`. 
-```
-ysuvkz41 0.9988
-tog3zj45 0.1146
-ky5xfj1d 0.6514
-yx4nfa35 1.5321
-bowsaf5e 1.6578
-```
-Link to Codalab: [Codalab](https://codalab.lisn.upsaclay.fr/competitions/18534)
+
 
 
 ## Hierarchy:
@@ -126,14 +116,10 @@ Link to Codalab: [Codalab](https://codalab.lisn.upsaclay.fr/competitions/18534)
 ```
 
 # Setup
-We have used anaconda for setting up the environemnt for our experiments:
+We have used python==3.6.5 environemnt for our experiments:
 ```
-python==3.6.5
+pip install -r requirements.txt
 ```
-[CUDA](https://developer.nvidia.com/cuda-toolkit-archive) and [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive) Setup:
-
-* CUDA Toolkit 10.2
-* cudnn v8.2.1.32 for CUDA10.2
 
 To install PyTorch with GPU support:
 ```
