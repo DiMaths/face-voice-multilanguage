@@ -65,11 +65,11 @@ def test(face_test_heard, voice_test_heard, face_test_unheard, voice_test_unhear
             for dat in f:
                 keys_unheard.append(dat.split(' ')[0])
         
-        with open('sub_score_%s_%s_heard.txt'%(ver, heard_lang), 'w') as f:
+        with open('./scores/sub_score_%s_%s_heard.txt'%(ver, heard_lang), 'w') as f:
             for i, dat in enumerate(scores_heard):
                 f.write('%s %f\n'%(keys_heard[i], dat))
                 
-        with open('sub_score_%s_%s_unheard.txt'%(ver, heard_lang), 'w') as f:
+        with open('./scores/sub_score_%s_%s_unheard.txt'%(ver, heard_lang), 'w') as f:
             for i, dat in enumerate(scores_unheard):
                 f.write('%s %f\n'%(keys_unheard[i], dat))
         
