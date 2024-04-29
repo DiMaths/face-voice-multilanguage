@@ -21,9 +21,9 @@ from tqdm import tqdm
 
 # In[0]
 
-def read_data(FLAGS):
-    train_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_train.csv'%(FLAGS.ver, FLAGS.train_lang, FLAGS.train_lang)
-    train_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_train.csv'%(FLAGS.ver, FLAGS.train_lang, FLAGS.train_lang)
+def read_data(ver, train_lang):
+    train_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_train.csv'%(ver, train_lang, train_lang)
+    train_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_train.csv'%(ver, train_lang, train_lang)
     
     print('Reading Train Faces')
     img_train = pd.read_csv(train_file_face, header=None)
@@ -73,10 +73,10 @@ def init_weights(m):
         torch.nn.init.xavier_uniform(m.weight)
         m.bias.data.fill_(0.01)
 
-def main(face_train, voice_train, train_label):
+def main(ver, train_lang, face_train, voice_train, train_label):
     
-    n_class = 64 if FLAGS.ver == 'v1' else 78
-    model = FOP(FLAGS, face_train.shape[1], voice_train.shape[1], n_class)
+    n_class = 64 if ver == 'v1' else 78
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, face_train.shape[1], voice_train.shape[1], n_class)
     model.apply(init_weights)
     
     ce_loss = nn.CrossEntropyLoss().cuda()
@@ -88,9 +88,9 @@ def main(face_train, voice_train, train_label):
         opl_loss.cuda()
         cudnn.benchmark = True
     
-# =============================================================================
-#     For Linear Fusion
-# =============================================================================
+    # =============================================================================
+    #     For Linear Fusion
+    # =============================================================================
     
     if FLAGS.fusion == 'linear':
     
@@ -102,9 +102,9 @@ def main(face_train, voice_train, train_label):
                         {'params' : model.fusion_layer.weight2}]
     
     
-# =============================================================================
-#     For Gated Fusion
-# =============================================================================
+    # =============================================================================
+    #     For Gated Fusion
+    # =============================================================================
     
     elif FLAGS.fusion == 'gated':
     
@@ -123,8 +123,8 @@ def main(face_train, voice_train, train_label):
     num_of_batches = (len(train_label) // FLAGS.batch_size)
     
     
-    save_dir = './models/%s/%s/%s_%s_%s_alpha_%0.2f'%(FLAGS.ver, FLAGS.train_lang, FLAGS.ver, FLAGS.train_lang, FLAGS.fusion, FLAGS.alpha)
-    best_model_dir = './models/%s/%s'%(FLAGS.ver, FLAGS.train_lang)
+    save_dir = './models/%s/%s/%s_%s_%s_alpha_%0.2f'%(ver, train_lang, ver, train_lang, FLAGS.fusion, FLAGS.alpha)
+    best_model_dir = './models/%s/%s'%(ver, train_lang)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     
@@ -147,7 +147,7 @@ def main(face_train, voice_train, train_label):
         loss_plot.append(loss_per_epoch)
         save_checkpoint({
             'epoch': epoch,
-            'state_dict': model.state_dict()}, save_dir, 'checkpoint_%04d_%0.3f.pth.tar'%(epoch, loss_per_epoch))
+            'state_dict': model.state_dict()}, save_dir, 'checkpoint_%04d.pth.tar'%(epoch))
 
         print('==> Epoch: %d/%d Loss: %0.2f Alpha:%0.2f, '%(epoch, FLAGS.epochs, loss_per_epoch, FLAGS.alpha))
         
@@ -252,16 +252,36 @@ if __name__ == '__main__':
     parser.add_argument('--train_lang', default='Urdu', type=str, help='Training language')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size for training.')
     parser.add_argument('--epochs', type=int, default=50, help='Max number of epochs to train, number')
-    parser.add_argument('--alpha', type=list, default=1, help='Alpha Values List')
+    parser.add_argument('--alpha', type=float, default=1.0, help='Alpha Value')
     parser.add_argument('--dim_embed', type=int, default=128,
                         help='Embedding Size')
     parser.add_argument('--fusion', type=str, default='gated', help='Fusion Type')
+    parser.add_argument('--train_all_langs', action='store_true', default=False, help='Training all possible language combinations')
+    
 
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()
     torch.manual_seed(FLAGS.seed)
     if FLAGS.cuda and torch.cuda.is_available():
         torch.cuda.manual_seed(FLAGS.seed)
-        
-    face_train, voice_train, train_label = read_data(FLAGS)
-    main(face_train, voice_train, train_label)
+    
+    if FLAGS.train_all_langs:
+        vers = ['v1', 'v1', 'v2', 'v2']
+        train_langs = ['English', 'Urdu', 'English', 'Hindi']
+    else:
+        vers = [FLAGS.version]
+        train_langs = [FLAGS.heard_lang]
+
+    for i in range(len(vers)):
+        ver = vers[i]
+        train_lang = train_langs[i]
+
+        print("="*30)
+        print('Version of the Dataset: %s'%(ver))
+        print('Training Language: %s'%(train_lang))
+        print("-"*30)
+
+        face_train, voice_train, train_label = read_data(ver, train_lang)
+        main(ver, train_lang, face_train, voice_train, train_label)
+
+        print("="*30)

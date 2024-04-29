@@ -25,9 +25,9 @@ def read_data(ver, test_file_face, test_file_voice):
 def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard):
     
     n_class = 64 if ver == 'v1' else 78
-    model = FOP(FLAGS, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
-    ckpt_path = "./models/%s/%s/best_checkpoint.pth.tar"%(ver, train_lang)
-    checkpoint = torch.load()
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
+    ckpt_path = "./models/%s/%s/best_checkpoint.pth.tar"%(ver, heard_lang)
+    checkpoint = torch.load(ckpt_path)
     model.load_state_dict(checkpoint['state_dict'])
     print("=> loaded checkpoint '{}' (epoch {})"
           .format(ckpt_path, checkpoint['epoch']))
@@ -54,7 +54,7 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         scores_heard = np.linalg.norm(face_heard - voice_heard, axis=1, keepdims=True)
         scores_unheard = np.linalg.norm(face_unheard - voice_unheard, axis=1, keepdims=True)
         
-        print('Writing scores to file')
+        print('Writing scores to files')
         
         keys_heard = []
         keys_unheard = []
@@ -69,11 +69,12 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         with open('./scores/sub_score_%s_%s_heard.txt'%(ver, heard_lang), 'w') as f:
             for i, dat in enumerate(scores_heard):
                 f.write('%s %f\n'%(keys_heard[i], dat))
+            print('Updated %s'%('./scores/sub_score_%s_%s_heard.txt'%(ver, heard_lang)))
                 
         with open('./scores/sub_score_%s_%s_unheard.txt'%(ver, heard_lang), 'w') as f:
             for i, dat in enumerate(scores_unheard):
                 f.write('%s %f\n'%(keys_unheard[i], dat))
-        
+            print('Updated %s'%('./scores/sub_score_%s_%s_unheard.txt'%(ver, heard_lang)))
     return 
 
 if __name__ == '__main__':
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     torch.manual_seed(FLAGS.seed)
     if FLAGS.cuda:
         torch.cuda.manual_seed(FLAGS.seed)
-    if FLAGS.all:
+    if FLAGS.all_langs:
         vers = ['v1', 'v1', 'v2', 'v2']
         heard_langs = ['English', 'Urdu', 'English', 'Hindi']
     else:
@@ -118,6 +119,7 @@ if __name__ == '__main__':
         
         print('Heard_Language: %s'%(heard_lang))
         print('Unheard Language: %s'%(unheard_lang))
+        print("-"*30)
 
         print('Loading Heard Language Data')
         test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_test.csv'%(ver, heard_lang, heard_lang)
