@@ -22,14 +22,15 @@ def read_data(ver, test_file_face, test_file_voice):
     voice_test = torch.from_numpy(voice_test).float()
     return face_test, voice_test
 
-def test(face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard):
+def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard):
     
     n_class = 64 if ver == 'v1' else 78
     model = FOP(FLAGS, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
-    checkpoint = torch.load(FLAGS.ckpt)
+    ckpt_path = "./models/%s/%s/best_checkpoint.pth.tar"%(ver, train_lang)
+    checkpoint = torch.load()
     model.load_state_dict(checkpoint['state_dict'])
     print("=> loaded checkpoint '{}' (epoch {})"
-          .format(FLAGS.ckpt, checkpoint['epoch']))
+          .format(ckpt_path, checkpoint['epoch']))
     model.eval()
     model.cuda()
     
@@ -79,43 +80,53 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument('--cuda', action='store_true', default=False, help='CUDA training')
-    parser.add_argument('--ckpt', type=str, help='Checkpoints directory.')
     parser.add_argument('--dim_embed', type=int, default=128,
                         help='Embedding Size')
     parser.add_argument('--fusion', type=str, default='gated', help='Fusion Type')
     parser.add_argument('--version', type=str, default='v1', help='Possible values: "v1" or "v2"')
     parser.add_argument('--heard_lang', type=str, default='English', help='Possible values: "English", "Hindi"(for v2), "Urdu"(for v1)')
-
+    parser.add_argument('--all_langs', action='store_true', default=False, help='Running all possible language combinations')
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.cuda = torch.cuda.is_available()
     torch.manual_seed(FLAGS.seed)
     if FLAGS.cuda:
         torch.cuda.manual_seed(FLAGS.seed)
+    if FLAGS.all:
+        vers = ['v1', 'v1', 'v2', 'v2']
+        heard_langs = ['English', 'Urdu', 'English', 'Hindi']
+    else:
+        vers = [FLAGS.version]
+        heard_langs = [FLAGS.heard_lang]
 
-    ver = FLAGS.version
-    heard_lang = FLAGS.heard_lang
+    for i in range(len(vers)):
+        ver = vers[i]
+        heard_lang = heard_langs[i]
 
-    if (ver == 'v1' and heard_lang == 'Hindi') or (ver == 'v2' and heard_lang == 'Urdu'):
-        raise ValueError("Contradictory combination: ver={} and heard_lang={}".format(ver, heard_lang))
+        if (ver == 'v1' and heard_lang == 'Hindi') or (ver == 'v2' and heard_lang == 'Urdu'):
+            raise ValueError("Contradictory combination: ver={} and heard_lang={}".format(ver, heard_lang))
 
-    assert ver == 'v1' or ver == 'v2', f"Invalid value for ver: {ver}"
-    assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for lang: {heard_lang}"
+        assert ver == 'v1' or ver == 'v2', f"Invalid value for ver: {ver}"
+        assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for lang: {heard_lang}"
 
-    if ver == 'v1':
-        unheard_lang = 'Urdu' if heard_lang == 'English' else 'English'
-    if ver == 'v2':
-        unheard_lang = 'Hindi' if heard_lang == 'English' else 'English'
+        if ver == 'v1':
+            unheard_lang = 'Urdu' if heard_lang == 'English' else 'English'
+        if ver == 'v2':
+            unheard_lang = 'Hindi' if heard_lang == 'English' else 'English'
+        
+        print("="*30)
+        
+        print('Heard_Language: %s'%(heard_lang))
+        print('Unheard Language: %s'%(unheard_lang))
 
-    print('Heard_Language: %s'%(heard_lang))
-    print('Unheard Language: %s'%(unheard_lang))
-
-    print('Loading Heard Language Data')
-    test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_test.csv'%(ver, heard_lang, heard_lang)
-    test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_test.csv'%(ver, heard_lang, heard_lang)
-    face_test_heard, voice_test_heard = read_data(ver, test_file_face, test_file_voice)
-    print('Loading UnHeard Language Data')
-    test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_unheard_test.csv'%(ver, heard_lang, unheard_lang)
-    test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_unheard_test.csv'%(ver, heard_lang, unheard_lang)
-    face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
-    test(face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard)
+        print('Loading Heard Language Data')
+        test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_test.csv'%(ver, heard_lang, heard_lang)
+        test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_test.csv'%(ver, heard_lang, heard_lang)
+        face_test_heard, voice_test_heard = read_data(ver, test_file_face, test_file_voice)
+        print('Loading UnHeard Language Data')
+        test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_unheard_test.csv'%(ver, heard_lang, unheard_lang)
+        test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_unheard_test.csv'%(ver, heard_lang, unheard_lang)
+        face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
+        test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard)
+        
+        print("="*30)

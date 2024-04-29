@@ -123,11 +123,13 @@ def main(face_train, voice_train, train_label):
     num_of_batches = (len(train_label) // FLAGS.batch_size)
     
     
-    save_dir = '%s_%s_%s_alpha_%0.2f'%(FLAGS.ver, FLAGS.train_lang, FLAGS.fusion, FLAGS.alpha)
-    
+    save_dir = './models/%s/%s/%s_%s_%s_alpha_%0.2f'%(FLAGS.ver, FLAGS.train_lang, FLAGS.ver, FLAGS.train_lang, FLAGS.fusion, FLAGS.alpha)
+    best_model_dir = './models/%s/%s'%(FLAGS.ver, FLAGS.train_lang)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     
+    best_epoch_loss = float('inf')
+
     while (epoch < FLAGS.epochs):
         loss_per_epoch = 0
         loss_plot = []
@@ -149,6 +151,12 @@ def main(face_train, voice_train, train_label):
 
         print('==> Epoch: %d/%d Loss: %0.2f Alpha:%0.2f, '%(epoch, FLAGS.epochs, loss_per_epoch, FLAGS.alpha))
         
+        if loss_per_epoch < best_epoch_loss:
+            best_epoch_loss = loss_per_epoch
+            save_checkpoint({
+            'epoch': epoch,
+            'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
+            print("+++++BEST MODEL SO FAR+++++")
         loss_per_epoch = 0
         epoch += 1
             

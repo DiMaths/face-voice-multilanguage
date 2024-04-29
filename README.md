@@ -1,6 +1,5 @@
 # FAME'24 Challenge (Face-voice Association in Multilingual Environments 2024) (Open)
-For more information on challenge please see [evaluation plan](https://arxiv.org/abs/2404.09342) 
- [Challenge Webpage](https://mavceleb.github.io/dataset/index.html)
+
 # Baseline
 Baseline code for v2 of MAV-Celeb dataset based on _'Fusion and Orthogonal Projection for Improved Face-Voice Association'_ [{paper}](https://ieeexplore.ieee.org/abstract/document/9747704) [{code}](https://github.com/msaadsaeed/FOP)
 ## Task
@@ -72,24 +71,8 @@ For Voice Embeddings (512-D) we use the method described in [Utterance Level Agg
 
 Pre extracted features for reproducing the baseline results can be downloaded.
 
-## Splits and Raw Data
-Download [raw data](https://drive.google.com/drive/folders/1OJyjXJULErvrvzLQmpJn5v8rRo0n_fod?usp=sharing) and [train/test splits](https://drive.google.com/drive/folders/1MEHtEVh9lSa9hNZxjEfNJnE3qrpm_PKw?usp=sharing) 
 
-#### Submission
-
-We provide both train and test splits of MAV-Celeb dataset. For v2 and v1, the test files are in format as below:
-```
-ysuvkz41 voices/English/00000.wav faces/English/00000.jpg 
-tog3zj45 voices/English/00001.wav faces/English/00001.jpg 
-ky5xfj1d voices/English/00002.wav faces/English/00002.jpg 
-yx4nfa35 voices/English/01062.wav faces/English/01062.jpg 
-bowsaf5e voices/English/01063.wav faces/English/01063.jpg 
-``` 
-We have kept the ground truth for fair evaluation during FAME challenge. Participants are expected to compute and submit a text file including the `id` and `L2 Scores` in the following format. We also provide `computeScore.py` to generate sample submission score files. Set `ver` and `heard_lang` accordingly and run the script. For example, if `ver='v1'` and `heard_lang='English'`, the script will generate two files in the given format: `sub_scores_v1_English_heard.txt` and `sub_scores_English_unheard.txt`. The heard scores are for `English` test language whereas unheard scores for language that is unheard by the model i.e. `Urdu`. 
-
-
-
-## Hierarchy:
+## File Hierarchy:
 ```
 ├── dataset
 │ ├── .zip files
@@ -105,11 +88,21 @@ We have kept the ground truth for fair evaluation during FAME challenge. Partici
 │ │ ├── .txt split files
 │ ├── v2
 │ │ ├── .txt split files
-├── v1_models
-│ ├── Urdu_fop_model
-│ │ ├── checkpoints.pth.tar
-│ ├── English_fop_model
-│ │ ├── checkpoints.pth.tar
+├── models
+│ │ ├── v1
+│ │ │ ├── English
+│ │ │ │ │ ├── best_checkpoint.pth.tar
+│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ ├── Urdu
+│ │ │ │ │ ├── best_checkpoint.pth.tar
+│ │ │ │ │ ├── folder with all checkpoints
+│ │ ├── v2
+│ │ │ ├── English
+│ │ │ │ │ ├── best_checkpoint.pth.tar
+│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ ├── Hindi
+│ │ │ │ │ ├── best_checkpoint.pth.tar
+│ │ │ │ │ ├── folder with all checkpoints
 ├── main.py
 ├── computeScore.py
 ├── retrieval.py
