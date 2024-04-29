@@ -7,23 +7,6 @@ from torch.autograd import Variable
 import pandas as pd
 from retrieval_model import FOP
 
-ver = 'v2'
-heard_lang = 'Hindi'
-
-if (ver == 'v1' and heard_lang == 'Hindi') or (ver == 'v2' and heard_lang == 'Urdu'):
-    raise ValueError("Contradictory combination: ver={} and heard_lang={}".format(ver, heard_lang))
-
-assert ver == 'v1' or ver == 'v2', f"Invalid value for ver: {ver}"
-assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for lang: {heard_lang}"
-
-if ver == 'v1':
-    unheard_lang = 'Urdu' if heard_lang == 'English' else 'English'
-if ver == 'v2':
-    unheard_lang = 'Hindi' if heard_lang == 'English' else 'English'
-
-print('Heard_Language: %s'%(heard_lang))
-print('Unheard Language: %s'%(unheard_lang))
-
 def read_data(ver, test_file_face, test_file_voice):
     print('Reading Test Face')
     face_test = pd.read_csv(test_file_face, header=None)
@@ -46,7 +29,7 @@ def test(face_test_heard, voice_test_heard, face_test_unheard, voice_test_unhear
     checkpoint = torch.load(FLAGS.ckpt)
     model.load_state_dict(checkpoint['state_dict'])
     print("=> loaded checkpoint '{}' (epoch {})"
-          .format('checkpoint.pth.tar', checkpoint['epoch']))
+          .format(FLAGS.ckpt, checkpoint['epoch']))
     model.eval()
     model.cuda()
     
@@ -96,18 +79,37 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument('--cuda', action='store_true', default=False, help='CUDA training')
-    parser.add_argument('--ckpt', type=str, default='./%s_models/%s_fop_model/checkpoint.pth.tar'%(ver, heard_lang), help='Checkpoints directory.')
-    
+    parser.add_argument('--ckpt', type=str, help='Checkpoints directory.')
     parser.add_argument('--dim_embed', type=int, default=128,
                         help='Embedding Size')
     parser.add_argument('--fusion', type=str, default='gated', help='Fusion Type')
-    
+    parser.add_argument('--version', type=str, default='v1', help='Possible values: "v1" or "v2"')
+    parser.add_argument('--heard_lang', type=str, default='English', help='Possible values: "English", "Hindi"(for v2), "Urdu"(for v1)')
+
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.cuda = torch.cuda.is_available()
     torch.manual_seed(FLAGS.seed)
     if FLAGS.cuda:
         torch.cuda.manual_seed(FLAGS.seed)
+
+    ver = FLAGS.version
+    heard_lang = FLAGS.heard_lang
+
+    if (ver == 'v1' and heard_lang == 'Hindi') or (ver == 'v2' and heard_lang == 'Urdu'):
+        raise ValueError("Contradictory combination: ver={} and heard_lang={}".format(ver, heard_lang))
+
+    assert ver == 'v1' or ver == 'v2', f"Invalid value for ver: {ver}"
+    assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for lang: {heard_lang}"
+
+    if ver == 'v1':
+        unheard_lang = 'Urdu' if heard_lang == 'English' else 'English'
+    if ver == 'v2':
+        unheard_lang = 'Hindi' if heard_lang == 'English' else 'English'
+
+    print('Heard_Language: %s'%(heard_lang))
+    print('Unheard Language: %s'%(unheard_lang))
+
     print('Loading Heard Language Data')
     test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_test.csv'%(ver, heard_lang, heard_lang)
     test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_test.csv'%(ver, heard_lang, heard_lang)
