@@ -26,11 +26,10 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
     
     n_class = 64 if ver == 'v1' else 78
     model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
-    ckpt_path = "./models/%s/%s/best_checkpoint.pth.tar"%(ver, heard_lang)
+    ckpt_path = f"./models/{ver}/{heard_lang}/best_checkpoint.pth.tar"
     checkpoint = torch.load(ckpt_path)
     model.load_state_dict(checkpoint['state_dict'])
-    print("=> loaded checkpoint '{}' (epoch {})"
-          .format(ckpt_path, checkpoint['epoch']))
+    print(f"=> loaded checkpoint '{ckpt_path}' (epoch {checkpoint['epoch']})")
     model.eval()
     model.cuda()
     
@@ -58,23 +57,23 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         
         keys_heard = []
         keys_unheard = []
-        with open('./face_voice_association_splits/%s/%s_test.txt'%(ver, heard_lang), 'r+') as f:
+        with open(f"./face_voice_association_splits/{ver}/{heard_lang}_test.txt", 'r+') as f:
             for dat in f:
                 keys_heard.append(dat.split(' ')[0])
                 
-        with open('./face_voice_association_splits/%s/%s_test.txt'%(ver, unheard_lang), 'r+') as f:
+        with open(f"./face_voice_association_splits/{ver}/{unheard_lang}_test.txt", 'r+') as f:
             for dat in f:
                 keys_unheard.append(dat.split(' ')[0])
         
-        with open('./scores/sub_score_%s_%s_heard.txt'%(ver, heard_lang), 'w') as f:
+        with open(f"./scores/sub_score_{ver}_{heard_lang}_heard.txt", 'w') as f:
             for i, dat in enumerate(scores_heard):
-                f.write('%s %f\n'%(keys_heard[i], dat))
-            print('Updated %s'%('./scores/sub_score_%s_%s_heard.txt'%(ver, heard_lang)))
+                f.write(f"{keys_unheard[i]} {dat}")
+            print(f"Updated ./scores/sub_score_{ver}_{heard_lang}_heard.txt")
                 
-        with open('./scores/sub_score_%s_%s_unheard.txt'%(ver, heard_lang), 'w') as f:
+        with open(f"./scores/sub_score_{ver}_{heard_lang}_unheard.txt", 'w') as f:
             for i, dat in enumerate(scores_unheard):
-                f.write('%s %f\n'%(keys_unheard[i], dat))
-            print('Updated %s'%('./scores/sub_score_%s_%s_unheard.txt'%(ver, heard_lang)))
+                f.write(f"{keys_unheard[i]} {dat}")
+            print(f"Updated ./scores/sub_score_{ver}_{heard_lang}_unheard.txt")
     return 
 
 if __name__ == '__main__':
@@ -105,10 +104,10 @@ if __name__ == '__main__':
         heard_lang = heard_langs[i]
 
         if (ver == 'v1' and heard_lang == 'Hindi') or (ver == 'v2' and heard_lang == 'Urdu'):
-            raise ValueError("Contradictory combination: ver={} and heard_lang={}".format(ver, heard_lang))
+            raise ValueError(f"Contradictory combination: {ver=} and {heard_lang=}")
 
         assert ver == 'v1' or ver == 'v2', f"Invalid value for ver: {ver}"
-        assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for lang: {heard_lang}"
+        assert heard_lang == 'Urdu' or heard_lang == 'Hindi' or heard_lang == 'English', f"Invalid value for heard_lang: {heard_lang}"
 
         if ver == 'v1':
             unheard_lang = 'Urdu' if heard_lang == 'English' else 'English'
@@ -117,17 +116,17 @@ if __name__ == '__main__':
         
         print("="*30)
         
-        print('Heard_Language: %s'%(heard_lang))
-        print('Unheard Language: %s'%(unheard_lang))
+        print(f"Heard_Language: {heard_lang}")
+        print(f"Unheard Language: {unheard_lang}")
         print("-"*30)
 
         print('Loading Heard Language Data')
-        test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_test.csv'%(ver, heard_lang, heard_lang)
-        test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_test.csv'%(ver, heard_lang, heard_lang)
+        test_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_faces_test.csv"
+        test_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_voices_test.csv"
         face_test_heard, voice_test_heard = read_data(ver, test_file_face, test_file_voice)
-        print('Loading UnHeard Language Data')
-        test_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_unheard_test.csv'%(ver, heard_lang, unheard_lang)
-        test_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_unheard_test.csv'%(ver, heard_lang, unheard_lang)
+        print('Loading Unheard Language Data')
+        test_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_faces_unheard_test.csv"
+        test_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_voices_unheard_test.csv"
         face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
         test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard)
         

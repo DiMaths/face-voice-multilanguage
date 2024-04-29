@@ -22,8 +22,8 @@ from tqdm import tqdm
 # In[0]
 
 def read_data(ver, train_lang):
-    train_file_face = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_faces_train.csv'%(ver, train_lang, train_lang)
-    train_file_voice = './preExtracted_vggFace_utteranceLevel_Features/%s/%s/%s_voices_train.csv'%(ver, train_lang, train_lang)
+    train_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}}/{train_lang}/{train_lang}_faces_train.csv"
+    train_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}}/{train_lang}/{train_lang}_voices_train.csv"
     
     print('Reading Train Faces')
     img_train = pd.read_csv(train_file_face, header=None)
@@ -117,14 +117,14 @@ def main(ver, train_lang, face_train, voice_train, train_label):
     optimizer = optim.Adam(parameters, lr=FLAGS.lr, weight_decay=0.01)
 
     n_parameters = sum([p.data.nelement() for p in model.parameters()])
-    print('  + Number of params: {}'.format(n_parameters))
+    print(f"  + Number of params: {n_parameters}")
     
     epoch=1
     num_of_batches = (len(train_label) // FLAGS.batch_size)
     
     
-    save_dir = './models/%s/%s/%s_%s_%s_alpha_%0.2f'%(ver, train_lang, ver, train_lang, FLAGS.fusion, FLAGS.alpha)
-    best_model_dir = './models/%s/%s'%(ver, train_lang)
+    save_dir = f"./models/{ver}/{train_lang}/{ver}_{train_lang}_{FLAGS.fusion}_alpha_{FLAGS.alpha:0.2f}"
+    best_model_dir = f"./models/{ver}/{train_lang}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     
@@ -133,7 +133,7 @@ def main(ver, train_lang, face_train, voice_train, train_label):
     while (epoch < FLAGS.epochs):
         loss_per_epoch = 0
         loss_plot = []
-        print('Epoch %03d'%(epoch))
+        print(f"Epoch {epoch: 03d}")
         for idx in tqdm(range(num_of_batches)):
             face_feats, batch_labels = get_batch(idx, FLAGS.batch_size, train_label, face_train)
             voice_feats, _ = get_batch(idx, FLAGS.batch_size, train_label, voice_train)
@@ -147,9 +147,9 @@ def main(ver, train_lang, face_train, voice_train, train_label):
         loss_plot.append(loss_per_epoch)
         save_checkpoint({
             'epoch': epoch,
-            'state_dict': model.state_dict()}, save_dir, 'checkpoint_%04d.pth.tar'%(epoch))
+            'state_dict': model.state_dict()}, save_dir, f"checkpoint_{epoch: 04d}.pth.tar")
 
-        print('==> Epoch: %d/%d Loss: %0.2f Alpha:%0.2f, '%(epoch, FLAGS.epochs, loss_per_epoch, FLAGS.alpha))
+        print(f"==> Epoch: {epoch}/{FLAGS.epochs} Loss: {loss_per_epoch: 0.2f} Alpha: {FLAGS.alpha: 0.2f} ")
         
         if loss_per_epoch < best_epoch_loss:
             best_epoch_loss = loss_per_epoch
@@ -277,8 +277,8 @@ if __name__ == '__main__':
         train_lang = train_langs[i]
 
         print("="*30)
-        print('Version of the Dataset: %s'%(ver))
-        print('Training Language: %s'%(train_lang))
+        print(f"Version of the Dataset: {ver}")
+        print(f"Training Language: {train_lang}")
         print("-"*30)
 
         face_train, voice_train, train_label = read_data(ver, train_lang)
