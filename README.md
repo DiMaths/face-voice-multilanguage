@@ -55,9 +55,13 @@ Face-voice association is established in cross-modal verification task, where th
 ## Evaluation Protocol
 The aim is to study the impact of language on face-voice assoication methods.
 Model X trained on language A is tested both on the same language A and unheard language B. Similarly a model Y trained on language B is tested both on same language B and unheard language A.
+
 For example in MAVCELEB v2 setting language A is English and language B is Hindi, then the whole pipeline looks as shown in figures below. 
+
+
 It is also important to note that the test identities are in any of the cases unheard by the network meaning the test set is disjoint from the train network. 
-For example: v2 has 84 identities both having English and Hindi voice samples. And 6 identities are reserved for test set while reamining are used for training the model.<br>
+
+For example: v2 has 84 identities both having English and Hindi voice samples. But 6 identities are reserved for test set while reamining are used for training the model.<br>
 
 <p align='center'>
   <img src='./images/eng_heard.JPG' width=49% height=50%>
