@@ -75,17 +75,22 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
                 print('Writing scores to files:')
             keys_heard = []
             keys_unheard = []
+            
             with open(f"./face_voice_association_splits/{ver}/{heard_lang}_test.txt", 'r+') as f:
                 for dat in f:
                     keys_heard.append(dat.split(' ')[0])
-                    
+                
             with open(f"./face_voice_association_splits/{ver}/{unheard_lang}_test.txt", 'r+') as f:
                 for dat in f:
                     keys_unheard.append(dat.split(' ')[0])
             
+            if FLAGS.debug_prints:
+                assert len(scores_heard) == len(keys_heard), f"Number of heard scores {len(scores_heard)} != number of heard samples in the split {len(keys_heard)}"
+                assert len(scores_unheard) == len(keys_unheard), f"Number of unheard scores {len(scores_unheard)} != number of unheard samples in the split {len(keys_unheard)}"
+
             with open(f"./scores/sub_score_{ver}_{heard_lang}_heard.txt", 'w') as f:
                 for i, dat in enumerate(scores_heard):
-                    f.write(f"{keys_unheard[i]} {dat}")
+                    f.write(f"{keys_heard[i]} {dat}")
                 print(f"Updated ./scores/sub_score_{ver}_{heard_lang}_heard.txt")
                     
             with open(f"./scores/sub_score_{ver}_{heard_lang}_unheard.txt", 'w') as f:

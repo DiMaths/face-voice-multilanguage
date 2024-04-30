@@ -129,7 +129,7 @@ def main(ver, train_lang, face_train, voice_train, train_label):
     
     best_epoch_loss = float('inf')
 
-    while (epoch < FLAGS.epochs):
+    while (epoch <= FLAGS.epochs):
         loss_per_epoch = 0
         loss_plot = []
         print(f"Epoch {epoch: 03d}")

@@ -123,8 +123,8 @@ conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10
 To train and get scores for all combinations of heard/unheard languages use the following:
 
 ```
-$ python3 main.py --train_all_langs True 
-$ python3 ./computeScore.py --all_langs True 
+$ python3 main.py --train_all_langs 
+$ python3 ./computeScore.py --all_langs 
 ```
 
 For more details on arguments and options of each script run:
