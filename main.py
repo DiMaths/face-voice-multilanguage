@@ -22,15 +22,14 @@ from tqdm import tqdm
 # In[0]
 
 def read_data(ver, train_lang):
-    train_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}}/{train_lang}/{train_lang}_faces_train.csv"
-    train_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}}/{train_lang}/{train_lang}_voices_train.csv"
+    train_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{train_lang}/{train_lang}_faces_train.csv"
+    train_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{train_lang}/{train_lang}_voices_train.csv"
     
     print('Reading Train Faces')
     img_train = pd.read_csv(train_file_face, header=None)
     img_train = np.asarray(img_train)
     train_label = img_train[:, -1]
     img_train = img_train[:, :-1]
-    # train_label = np.asarray(train_label)
     print('Reading Voices')
     voice_train = pd.read_csv(train_file_voice, header=None)
     voice_train = np.asarray(voice_train)
