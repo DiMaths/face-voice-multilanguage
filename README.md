@@ -1,7 +1,7 @@
-# FAME'24 Challenge (Face-voice Association in Multilingual Environments 2024) (Open)
+# FAME'24 Challenge (Face-voice Association in Multilingual Environments 2024)
 
 # Baseline
-Baseline code for v2 of MAV-Celeb dataset based on _'Fusion and Orthogonal Projection for Improved Face-Voice Association'_ [{paper}](https://ieeexplore.ieee.org/abstract/document/9747704) [{code}](https://github.com/msaadsaeed/FOP)
+Baseline code for v2 of MAV-Celeb dataset based on _'Fusion and Orthogonal Projection for Improved Face-Voice Association'_ [{paper}](https://ieeexplore.ieee.org/abstract/document/9747704) [{code}](https://github.com/msaadsaeed/FOP) [{baseline repo}](https://github.com/mavceleb/mavceleb_baseline.git)
 ## Task
 Face-voice association is established in cross-modal verification task. The goal of the cross-modal verification task is to verify if, in a given single sample with both a face and voice, both belong to the same identity. In addition, we analyze the impact of multiple of languages on cross-modal verification task.
 
@@ -57,19 +57,19 @@ Face-voice association is established in cross-modal verification task. The goal
 The aim is to study the impact of language on face-voice assoication methods. For this we train a model X on one language (English) then test on same language (English) and unheard language (Hindi). Similarly we train a model Y on one language (Hindi) then test the model on same language (Hindi) and unheard language (English) as shown in figure below. It is also important to note that the test identities are also unheard by the network meaning the test set is disjoint from the train network. For example: v2 has 84 identities both having English and Hindi voice samples. We have separated 6 identities for test set while leverage reamining for training the model.<br>
 
 <p align='center'>
-  <img src='./images/eng_heard.JPG' width=40% height=40%>
-  <img src='./images/hin_heard.JPG' width=40% height=40%>
+  <img src='./images/eng_heard.JPG' width=49% height=50%>
+  <img src='./images/hin_heard.JPG' width=49% height=50%>
 </p>
 
 
 ## Extracted features:
+Pre extracted features for reproducing the baseline results can be downloaded [here](https://drive.google.com/drive/folders/1LfCxZiAqmsD9sgEMRrJgN5QBr_CL-hzD?usp=sharing).
+
 ### Face Features:
-For Face Embeddings (4096-D) we use [VGGFace](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/). The model can be downloaded [here](https://drive.google.com/drive/folders/1ct_TXo2x-1tKGAnGYDaC6XzIPRaVN6J-?usp=sharing). Run `vggFaceFeat.py` for face feature extraction.
+For Face Embeddings (4096-D) we use [VGGFace](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/). The model can be downloaded [here](https://drive.google.com/drive/folders/1ct_TXo2x-1tKGAnGYDaC6XzIPRaVN6J-?usp=sharing).
 
 ### Voice Features:
-For Voice Embeddings (512-D) we use the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code we used is released by authors and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). We fine tuned the model on v2 split of MAV-Celeb dataset for feature extraction. The pre-trained model on MAV-Celeb ( v2) can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing). Run `uttLevelVoiceFeat.py` for voice feature extraction.
-
-Pre extracted features for reproducing the baseline results can be downloaded.
+For Voice Embeddings (512-D) we use the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code we used is released by authors and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). We fine tuned the model on v2 split of MAV-Celeb dataset for feature extraction. The pre-trained model on MAV-Celeb ( v2) can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing).
 
 
 ## File Hierarchy:
@@ -85,26 +85,26 @@ Pre extracted features for reproducing the baseline results can be downloaded.
 │ │ │ ├── .csv and .txt files
 ├── face_voice_association_splits
 │ ├── v1
-│ │ ├── .txt split files
+│ │ ├── *.txt # txt split files
 │ ├── v2
-│ │ ├── .txt split files
+│ │ ├── *.txt # txt split files
 ├── models
 │ │ ├── v1
 │ │ │ ├── English
-│ │ │ │ │ ├── best_checkpoint.pth.tar
-│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ │ │ ├── best_checkpoint.pth.tar # best epoch loss of last trained model
+│ │ │ │ │ ├── ... # folders with all checkpoints for each model config
 │ │ │ ├── Urdu
-│ │ │ │ │ ├── best_checkpoint.pth.tar
-│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ │ │ ├── best_checkpoint.pth.tar # best epoch loss of last trained model
+│ │ │ │ │ ├── ... # folders with all checkpoints for each model config
 │ │ ├── v2
 │ │ │ ├── English
-│ │ │ │ │ ├── best_checkpoint.pth.tar
-│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ │ │ ├── best_checkpoint.pth.tar # best epoch loss of last trained model
+│ │ │ │ │ ├── ... # folders with all checkpoints for each model config
 │ │ │ ├── Hindi
-│ │ │ │ │ ├── best_checkpoint.pth.tar
-│ │ │ │ │ ├── folder with all checkpoints
+│ │ │ │ │ ├── best_checkpoint.pth.tar # best epoch loss of last trained model
+│ │ │ │ │ ├── ... # folders with all checkpoints for each model config
 ├── main.py
-├── computeScore.py
+├── evaluate.py
 ├── retrieval.py
 ```
 
@@ -119,6 +119,7 @@ To install PyTorch with GPU support:
 conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10.2 -c pytorch
 ```
 
+# Run
 To train and get scores for all combinations of heard/unheard languages use the following:
 
 ```
