@@ -150,8 +150,9 @@ def main(ver, train_lang, face_train, voice_train, train_label):
 
         print(f"==> Epoch: {epoch}/{FLAGS.epochs} Loss: {loss_per_epoch: 0.2f} Alpha: {FLAGS.alpha: 0.2f} ")
         
-        if loss_per_epoch < best_epoch_loss:
-            best_epoch_loss = loss_per_epoch
+        if (loss_per_epoch - best_epoch_loss) / loss_per_epoch < 0.005:
+            if loss_per_epoch < best_epoch_loss:
+                best_epoch_loss = loss_per_epoch
             save_checkpoint({
             'epoch': epoch,
             'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
