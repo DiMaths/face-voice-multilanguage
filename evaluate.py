@@ -285,14 +285,14 @@ if __name__ == '__main__':
 
         if FLAGS.debug_prints:
             print('Loading Heard Language Data')
-        test_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_faces_test.csv"
-        test_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{heard_lang}_voices_test.csv"
+        test_file_face = f"./pre_extracted_features/{ver}/{heard_lang}/{heard_lang}_faces_test.csv"
+        test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{heard_lang}_voices_test.csv"
         face_test_heard, voice_test_heard = read_data(ver, test_file_face, test_file_voice)
         
         if FLAGS.debug_prints:
             print('Loading Unheard Language Data')
-        test_file_face = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{unheard_lang}_faces_unheard_test.csv"
-        test_file_voice = f"./preExtracted_vggFace_utteranceLevel_Features/{ver}/{heard_lang}/{unheard_lang}_voices_unheard_test.csv"
+        test_file_face = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_faces_unheard_test.csv"
+        test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_voices_unheard_test.csv"
         face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
         test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard, FLAGS.compute_server_scores)
         
