@@ -64,7 +64,7 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         print('*'*30)
         print("Evaluation on unheard language")
         print('-'*30)
-        unheard_acc, unheard_auc, unheard_eer = eval_metrics(face_heard, voice_heard)
+        unheard_acc, unheard_auc, unheard_eer = eval_metrics(face_unheard, voice_unheard)
 
         if compute_server_scores:
             print('Computing L2 scores for server submission:')
