@@ -40,6 +40,8 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
     model.eval()
     model.cuda()
     
+    results = {"heard": {}, "unheard": {}}
+
     if FLAGS.cuda:
         face_test_heard, voice_test_heard = face_test_heard.cuda(), voice_test_heard.cuda()
         face_test_unheard, voice_test_unheard = face_test_unheard.cuda(), voice_test_unheard.cuda()
@@ -60,11 +62,12 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         print('*'*30)
         print("Evaluation on heard language")
         print('-'*30)
-        heard_acc, heard_auc, heard_eer = eval_metrics(face_heard, voice_heard)
+        results["heard"]["ACC"], results["heard"]["AUC"], results["heard"]["ERR"] = eval_metrics(face_heard, voice_heard)
         print('*'*30)
         print("Evaluation on unheard language")
         print('-'*30)
-        unheard_acc, unheard_auc, unheard_eer = eval_metrics(face_unheard, voice_unheard)
+        results["unheard"]["ACC"], results["unheard"]["AUC"], results["unheard"]["ERR"] = eval_metrics(face_unheard, voice_unheard)
+        
 
         if compute_server_scores:
             print('Computing L2 scores for server submission:')
@@ -98,7 +101,7 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
                     f.write(f"{keys_unheard[i]} {dat}")
                 print(f"Updated ./scores/sub_score_{ver}_{heard_lang}_unheard.txt")
 
-    return heard_acc, heard_auc, heard_eer, unheard_acc, unheard_auc, unheard_eer
+    return results
 
 def eval_metrics(face, voice):
     feat_list = []
@@ -125,7 +128,7 @@ def eval_metrics(face, voice):
     eer = fpr[np.nanargmin(np.absolute((fnr - fpr)))]
     print(f"Equal Error Rate (EER): {eer:.3f}")
 
-    return accuracy, auc, eer
+    return f"{np.mean(accuracy):.3f}+-{np.std(accuracy):.3f}", f"{auc: .3f}", f"{eer: .3f}"
 
 def same_func(f):
     issame_lst = []
@@ -263,6 +266,13 @@ if __name__ == '__main__':
         vers = [FLAGS.version]
         heard_langs = [FLAGS.heard_lang]
 
+    results_dictionary = {
+                        'v1':
+                            {'English': {}, 'Urdu': {}},
+                        'v2': 
+                            {'English': {}, 'Hindi':{}}
+                        }
+
     for i in range(len(vers)):
         ver = vers[i]
         heard_lang = heard_langs[i]
@@ -294,6 +304,38 @@ if __name__ == '__main__':
         test_file_face = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_faces_unheard_test.csv"
         test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_voices_unheard_test.csv"
         face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
-        test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard, FLAGS.compute_server_scores)
         
+        results_dictionary[ver][heard_lang] = test(ver,
+                                                   heard_lang, 
+                                                   unheard_lang,
+                                                   face_test_heard,
+                                                   voice_test_heard,
+                                                   face_test_unheard,
+                                                   voice_test_unheard,
+                                                   FLAGS.compute_server_scores)
         print("="*30)
+
+    results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed)])+".txt"
+    
+    with open(results_path, 'w') as f:
+        for metric in ["ACC", "AUC", "ERR"]:
+            metric_full_name = "Accuracy (mean +- SD)"
+            if metric == "AUC":
+                metric_full_name = "AUC (Area Under the Curve)"
+            elif metric == "ERR":
+                metric_full_name = "ERR (Equal Error Rate)"
+            print(f"{'***** ' + metric_full_name + ' *****': ^50}", file=f)
+            print("+"*50, file=f)
+            print(f"|{' '*16}{'English test': ^16}|{'Urdu test': ^15}|", file=f)
+            print("-"*50, file=f)
+            print(f"|{'English train': ^16}|{results_dictionary['v1']['English']['heard'][metric]: ^15}|{results_dictionary['v1']['English']['unheard'][metric]:^15}|", file=f)
+            print("-"*50, file=f)
+            print(f"|{'Urdu train': ^16}|{results_dictionary['v1']['Urdu']['unheard'][metric]: ^15}|{results_dictionary['v1']['Urdu']['heard'][metric]:^15}|", file=f)
+            print("-"*50, file=f)
+            print("+"*50, file=f)
+            print(f"|{' '*16}{'English test': ^16}|{'Hindi test':^15}|", file=f)
+            print("-"*50, file=f)
+            print(f"|{'English train': ^16}|{results_dictionary['v2']['English']['heard'][metric]:^15}|{results_dictionary['v2']['English']['unheard'][metric]:^15}|", file=f)
+            print("-"*50, file=f)
+            print(f"|{'Hindi train': ^16}|{results_dictionary['v2']['Hindi']['unheard'][metric]:^15}|{results_dictionary['v2']['Hindi']['heard'][metric]:^15}|", file=f)
+            print("-"*50, file=f)
