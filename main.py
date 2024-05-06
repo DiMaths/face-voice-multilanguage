@@ -156,7 +156,10 @@ def main(ver, train_lang, face_train, voice_train, train_label):
             save_checkpoint({
             'epoch': epoch,
             'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
-            print("+++++BEST MODEL SO FAR+++++")
+            print(f"{'+++++ BEST MODEL SO FAR +++++': ^30}")
+        if (loss_per_epoch - best_epoch_loss) / loss_per_epoch > 0.01:
+            print(f"{'----- EARLY STOPPING -----': ^30}")
+            return
         loss_per_epoch = 0
         epoch += 1
             

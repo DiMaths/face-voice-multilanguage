@@ -5,6 +5,7 @@ import torch
 import torch.utils.data
 from torch.autograd import Variable
 import pandas as pd
+import os
 
 from sklearn import metrics
 from sklearn.model_selection import KFold
@@ -242,6 +243,7 @@ def cross_eval(embeddings, actual_issame, nrof_folds=10):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--save_to', type=str, help='Path to txt file for storing results')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument('--cuda', action='store_true', default=False, help='CUDA training')
     parser.add_argument('--dim_embed', type=int, default=128,
@@ -252,7 +254,7 @@ if __name__ == '__main__':
     parser.add_argument('--all_langs', action='store_true', default=False, help='Running all possible language combinations')
     parser.add_argument('--compute_server_scores', action='store_true', default=False, help='Computing L2 scores for server submission')
     parser.add_argument('--debug_prints', action='store_true', default=False, help='Printing extra info helpful for debugging')
-
+    
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.cuda = torch.cuda.is_available()
@@ -315,8 +317,19 @@ if __name__ == '__main__':
                                                    FLAGS.compute_server_scores)
         print("="*30)
 
-    results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed)])+".txt"
+    if FLAGS.save_to:
+        results_path = FLAGS.save_to
+    else:
+        results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed)])+".txt"
     
+    if not results_path.startswith("./results/"):
+        results_path = os.path.join("results", results_path)
+
+    if not results_path.endswith(".txt"):
+        raise ValueError("Results are stored in .txt file, please provide corresponding path")
+
+    print(f"Saving results into {results_path}")
+
     with open(results_path, 'w') as f:
         for metric in ["ACC", "AUC", "ERR"]:
             metric_full_name = "Accuracy (mean +- SD)"
