@@ -81,6 +81,12 @@ Voice Embeddings (512-D) are achieved with the help of the method described in [
 
 ## File Hierarchy
 ```
+├── main.py
+├── evaluate.py
+├── retrieval_model.py
+├── requirements.txt
+├── readme_images
+│ ├── ... 
 ├── dataset
 │ ├── .zip files
 ├── pre_extracted_features
@@ -110,9 +116,12 @@ Voice Embeddings (512-D) are achieved with the help of the method described in [
 │ │ │ ├── Hindi
 │ │ │ │ │ ├── best_checkpoint.pth.tar # best epoch loss of last trained model
 │ │ │ │ │ ├── ... # folders with all checkpoints for each model config
-├── main.py
-├── evaluate.py
-├── retrieval.py
+├── results
+│ ├── ... # .txt files with Accuracy, AUC and ERR scores
+│ ├── ... # 1 file for each model (see an example in Run section below)
+├── scores
+│ ├── sub_score_*.txt  # server format of L2 scores
+│ ├── ... # 1 file for each heard/unheard combination
 ```
 
 # Setup
@@ -131,7 +140,59 @@ To train and get scores for all combinations of heard/unheard languages use the 
 
 ```
 $ python3 main.py --train_all_langs 
-$ python3 evaluate.py --all_langs 
+$ python3 evaluate.py --all_langs --save_to ./results/new_results.txt
+```
+
+If using any of `--dim_embed`,`--mid_att_dim`, `--fusion` for training (as options of `main.py`), then you need to use the same options and values for `evaluate.py`. 
+
+Results .txt file looks like this:
+```
+        ***** Accuracy (mean +- SD) *****         
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |   Urdu test   |
+--------------------------------------------------
+| English train  | 0.xxx+-0.xxx  | 0.xxx+-0.xxx  |
+--------------------------------------------------
+|   Urdu train   | 0.xxx+-0.xxx  | 0.xxx+-0.xxx  |
+--------------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |  Hindi test   |
+--------------------------------------------------
+| English train  | 0.xxx+-0.xxx  | 0.xxx+-0.xxx  |
+--------------------------------------------------
+|  Hindi train   | 0.xxx+-0.xxx  | 0.xxx+-0.xxx  |
+--------------------------------------------------
+      ***** AUC (Area Under the Curve) *****      
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |   Urdu test   |
+--------------------------------------------------
+| English train  |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+|   Urdu train   |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |  Hindi test   |
+--------------------------------------------------
+| English train  |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+|  Hindi train   |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+        ***** ERR (Equal Error Rate) *****        
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |   Urdu test   |
+--------------------------------------------------
+| English train  |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+|   Urdu train   |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++
+|                  English test  |  Hindi test   |
+--------------------------------------------------
+| English train  |     0.xxx     |     0.xxx     |
+--------------------------------------------------
+|  Hindi train   |     0.xxx     |     0.xxx     |
+--------------------------------------------------
 ```
 
 To get description of options and arguments of each script run them with `--help`.
+

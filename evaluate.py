@@ -33,7 +33,7 @@ def read_data(ver, test_file_face, test_file_voice):
 def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard, compute_server_scores: bool =False):
     
     n_class = 64 if ver == 'v1' else 78
-    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
     ckpt_path = f"./models/{ver}/{heard_lang}/best_checkpoint.pth.tar"
     checkpoint = torch.load(ckpt_path)
     model.load_state_dict(checkpoint['state_dict'])
@@ -248,6 +248,9 @@ if __name__ == '__main__':
     parser.add_argument('--cuda', action='store_true', default=False, help='CUDA training')
     parser.add_argument('--dim_embed', type=int, default=128,
                         help='Embedding Size')
+    parser.add_argument('--mid_att_dim', type=int, default=128,
+                        help='Used only in case of gated fusion, it is Intermediate Embedding Size (Inside Attention Algorithm)')
+    
     parser.add_argument('--fusion', type=str, default='gated', help='Fusion Type')
     parser.add_argument('--version', type=str, default='v1', help='Possible values: "v1" or "v2"')
     parser.add_argument('--heard_lang', type=str, default='English', help='Possible values: "English", "Hindi"(for v2), "Urdu"(for v1)')
@@ -320,7 +323,7 @@ if __name__ == '__main__':
     if FLAGS.save_to:
         results_path = FLAGS.save_to
     else:
-        results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed)])+".txt"
+        results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed), str(FLAGS.mid_att_dim)])+".txt"
     
     if not results_path.startswith("./results/"):
         results_path = os.path.join("results", results_path)

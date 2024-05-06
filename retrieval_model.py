@@ -79,7 +79,7 @@ Main Module
 '''
 
 class FOP(nn.Module):
-    def __init__(self, cuda, fusion, dim_embed, face_feat_dim, voice_feat_dim, n_class):
+    def __init__(self, cuda, fusion, dim_embed, mid_att_dim, face_feat_dim, voice_feat_dim, n_class):
         super(FOP, self).__init__()
         
         self.voice_branch = EmbedBranch(voice_feat_dim, dim_embed)
@@ -88,7 +88,7 @@ class FOP(nn.Module):
         if fusion == 'linear':
             self.fusion_layer = LinearWeightedAvg(dim_embed, dim_embed)
         elif fusion == 'gated':
-            self.fusion_layer = GatedFusion(face_feat_dim, voice_feat_dim, dim_embed, 128, dim_embed)
+            self.fusion_layer = GatedFusion(face_feat_dim, voice_feat_dim, dim_embed, mid_att_dim, dim_embed)
         
         self.logits_layer = nn.Linear(dim_embed, n_class)
 

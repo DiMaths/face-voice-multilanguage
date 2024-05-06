@@ -75,7 +75,7 @@ def init_weights(m):
 def main(ver, train_lang, face_train, voice_train, train_label):
     
     n_class = 64 if ver == 'v1' else 78
-    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, face_train.shape[1], voice_train.shape[1], n_class)
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_train.shape[1], voice_train.shape[1], n_class)
     model.apply(init_weights)
     
     ce_loss = nn.CrossEntropyLoss().cuda()
@@ -150,16 +150,17 @@ def main(ver, train_lang, face_train, voice_train, train_label):
 
         print(f"==> Epoch: {epoch}/{FLAGS.epochs} Loss: {loss_per_epoch: 0.2f} Alpha: {FLAGS.alpha: 0.2f} ")
         
-        if (loss_per_epoch - best_epoch_loss) / loss_per_epoch < 0.005:
-            if loss_per_epoch < best_epoch_loss:
+        if epoch > 1:
+            if (loss_per_epoch - best_epoch_loss) / best_epoch_loss > -FLAGS.early_stop_criterion:
+                print(f"{'----- EARLY STOPPING -----': ^30}")
+                return
+            if loss_per_epoch < best_epoch_loss:    
                 best_epoch_loss = loss_per_epoch
-            save_checkpoint({
-            'epoch': epoch,
-            'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
-            print(f"{'+++++ BEST MODEL SO FAR +++++': ^30}")
-        if (loss_per_epoch - best_epoch_loss) / loss_per_epoch > 0.01:
-            print(f"{'----- EARLY STOPPING -----': ^30}")
-            return
+                save_checkpoint({
+                'epoch': epoch,
+                'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
+                print(f"{'+++++ BEST MODEL SO FAR +++++': ^30}")
+            
         loss_per_epoch = 0
         epoch += 1
             
@@ -260,6 +261,10 @@ if __name__ == '__main__':
                         help='Embedding Size')
     parser.add_argument('--fusion', type=str, default='gated', help='Fusion Type')
     parser.add_argument('--train_all_langs', action='store_true', default=False, help='Training all possible language combinations')
+    parser.add_argument('--mid_att_dim', type=int, default=128,
+                        help='Used only in case of gated fusion, it is Intermediate Embedding Size (Inside Attention Algorithm)')
+    parser.add_argument('--early_stop_criterion', type=float, default=1e-3,
+                        help='Minimum relative epoch loss improvement')
     
 
     global FLAGS
