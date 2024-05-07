@@ -146,7 +146,7 @@ def main(ver, train_lang, face_train, voice_train, train_label):
         loss_plot.append(loss_per_epoch)
         save_checkpoint({
             'epoch': epoch,
-            'state_dict': model.state_dict()}, save_dir, f"checkpoint_{epoch: 04d}.pth.tar")
+            'state_dict': model.state_dict()}, save_dir, f"checkpoint_{epoch: 03d}.pth.tar")
 
         print(f"==> Epoch: {epoch}/{FLAGS.epochs} Loss: {loss_per_epoch: 0.2f} Alpha: {FLAGS.alpha: 0.2f} ")
         

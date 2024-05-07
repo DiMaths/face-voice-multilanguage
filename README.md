@@ -10,27 +10,6 @@ This FAME challenge, in addition, enforces analysis of the impact of multiple of
 ## Baseline Results from Paper Authors
 <table border="1" align='center'>
   <tr>
-    <td colspan="4" align="center" ><b>V2-EH</b></td>
-  </tr>
-  <tr>
-    <td>Method</td>
-    <td>Configuration</td>
-    <td align='center'>English test<br>(EER)</td>
-    <td align='center'>Hindi test<br>(EER)</td>
-  </tr>
-  <tr>
-    <td rowspan="2" align="center">FOP</td>
-    <td>English train</td>
-    <td><b>20.8</b></td>
-    <td>24.0</td>
-    <td rowspan="2" align="center"><b>22.0</b></td>
-  </tr>
-  <tr>
-    <td>Hindi train</td>
-    <td>24.0</td>
-    <td><b>19.3</b></td>
-  </tr>
-  <tr>
     <td colspan="4" align="center"><b>V1-EU</b></td>
   </tr>
   <tr>
@@ -50,6 +29,28 @@ This FAME challenge, in addition, enforces analysis of the impact of multiple of
     <td>Urdu train</td>
     <td>40.4</td>
     <td><b>25.8</b></td>
+  </tr>
+  
+  <tr>
+    <td colspan="4" align="center" ><b>V2-EH</b></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td>Configuration</td>
+    <td align='center'>English test<br>(EER)</td>
+    <td align='center'>Hindi test<br>(EER)</td>
+  </tr>
+  <tr>
+    <td rowspan="2" align="center">FOP</td>
+    <td>English train</td>
+    <td><b>20.8</b></td>
+    <td>24.0</td>
+    <td rowspan="2" align="center"><b>22.0</b></td>
+  </tr>
+  <tr>
+    <td>Hindi train</td>
+    <td>24.0</td>
+    <td><b>19.3</b></td>
   </tr>
   
 </table>
