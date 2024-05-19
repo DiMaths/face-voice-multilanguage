@@ -19,11 +19,16 @@ import torch.nn.functional as F
 import torch.nn as nn
 from tqdm import tqdm
 
-# In[0]
+from retrieval_model import FOP
+
 
 def read_data(ver, train_lang):
     train_file_face = f"./pre_extracted_features/{ver}/{train_lang}/{train_lang}_faces_train.csv"
-    train_file_voice = f"./pre_extracted_features/{ver}/{train_lang}/{train_lang}_voices_train.csv"
+    
+    if FLAGS.ge2e_voice:
+        train_file_voice = f"./GE2E_Embeddings/mavceleb_{ver}_train/{train_lang}.csv"
+    else:    
+        train_file_voice = f"./pre_extracted_features/{ver}/{train_lang}/{train_lang}_voices_train.csv"
     
     print('Reading Train Faces')
     img_train = pd.read_csv(train_file_face, header=None)
@@ -31,9 +36,12 @@ def read_data(ver, train_lang):
     train_label = img_train[:, -1]
     img_train = img_train[:, :-1]
     print('Reading Voices')
-    voice_train = pd.read_csv(train_file_voice, header=None)
+    voice_train = pd.read_csv(train_file_voice, header=None, low_memory=False)
     voice_train = np.asarray(voice_train)
-    voice_train = voice_train[:, :-1]
+    if FLAGS.ge2e_voice:
+        voice_train = voice_train[1: , 4:].astype(np.float)
+    else:
+        voice_train = voice_train[:, :-1].astype(np.float)
     
     le = preprocessing.LabelEncoder()
     le.fit(train_label)
@@ -54,13 +62,6 @@ def read_data(ver, train_lang):
     
     
     return img_train, voice_train, train_label
-
-
-# In[1]
-print('Training')
-from retrieval_model import FOP
-
-os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
  
 def get_batch(batch_index, batch_size, labels, f_lst):
     start_ind = batch_index * batch_size
@@ -122,7 +123,7 @@ def main(ver, train_lang, face_train, voice_train, train_label):
     num_of_batches = (len(train_label) // FLAGS.batch_size)
     
     
-    save_dir = f"./models/{ver}/{train_lang}/{ver}_{train_lang}_{FLAGS.fusion}_alpha_{FLAGS.alpha:0.2f}"
+    save_dir = f"./models/{ver}/{train_lang}/{'GE2E_voice_' if FLAGS.ge2e_voice else ''}{ver}_{train_lang}_{FLAGS.fusion}_alpha_{FLAGS.alpha:0.2f}"
     best_model_dir = f"./models/{ver}/{train_lang}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -151,14 +152,14 @@ def main(ver, train_lang, face_train, voice_train, train_label):
         print(f"==> Epoch: {epoch}/{FLAGS.epochs} Loss: {loss_per_epoch: 0.2f} Alpha: {FLAGS.alpha: 0.2f} ")
         
         if epoch > 1:
-            if (loss_per_epoch - best_epoch_loss) / best_epoch_loss > -FLAGS.early_stop_criterion:
+            if (loss_per_epoch - best_epoch_loss) / best_epoch_loss > FLAGS.early_stop_criterion:
                 print(f"{'----- EARLY STOPPING -----': ^30}")
                 return
             if loss_per_epoch < best_epoch_loss:    
                 best_epoch_loss = loss_per_epoch
                 save_checkpoint({
                 'epoch': epoch,
-                'state_dict': model.state_dict()}, best_model_dir, 'best_checkpoint.pth.tar')
+                'state_dict': model.state_dict()}, best_model_dir, f"best_checkpoint{'_GE2E_voice' if FLAGS.ge2e_voice else ''}.pth.tar")
                 print(f"{'+++++ BEST MODEL SO FAR +++++': ^30}")
             
         loss_per_epoch = 0
@@ -187,7 +188,7 @@ class OrthogonalProjectionLoss(nn.Module):
         pos_pairs_mean = (mask_pos * dot_prod).sum() / (mask_pos.sum() + 1e-6)
         neg_pairs_mean = torch.abs(mask_neg * dot_prod).sum() / (mask_neg.sum() + 1e-6)
 
-        loss = (1.0 - pos_pairs_mean) + (0.7 * neg_pairs_mean)
+        loss = 1.0 - pos_pairs_mean + neg_pairs_mean
 
         return loss, pos_pairs_mean, neg_pairs_mean
 
@@ -265,7 +266,11 @@ if __name__ == '__main__':
                         help='Used only in case of gated fusion, it is Intermediate Embedding Size (Inside Attention Algorithm)')
     parser.add_argument('--early_stop_criterion', type=float, default=1e-3,
                         help='Minimum relative epoch loss improvement')
+    parser.add_argument('--ge2e_voice', action='store_true', default=False, help='Uses GE2E precomputed voice embeddings')
     
+    
+    print('Training')
+    os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
 
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()

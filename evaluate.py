@@ -19,12 +19,15 @@ def read_data(ver, test_file_face, test_file_voice):
     face_test = pd.read_csv(test_file_face, header=None)
     if FLAGS.debug_prints:
         print('Reading Test Voice') 
-    voice_test = pd.read_csv(test_file_voice, header=None)
+    voice_test = pd.read_csv(test_file_voice, header=None, low_memory=False)
     
     face_test = np.asarray(face_test)
     face_test = face_test[:, :4096]
     voice_test = np.asarray(voice_test)
-    voice_test = voice_test[:, :512]
+    if FLAGS.ge2e_voice:
+        voice_test = voice_test[1: , 1:].astype(np.float)
+    else:
+        voice_test = voice_test[:, :512]
     
     face_test = torch.from_numpy(face_test).float()
     voice_test = torch.from_numpy(voice_test).float()
@@ -34,7 +37,7 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
     
     n_class = 64 if ver == 'v1' else 78
     model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
-    ckpt_path = f"./models/{ver}/{heard_lang}/best_checkpoint.pth.tar"
+    ckpt_path = f"./models/{ver}/{heard_lang}/best_checkpoint{'_GE2E_voice' if FLAGS.ge2e_voice else ''}.pth.tar"
     checkpoint = torch.load(ckpt_path)
     model.load_state_dict(checkpoint['state_dict'])
     print(f"=> loaded checkpoint '{ckpt_path}' (epoch {checkpoint['epoch']})")
@@ -70,7 +73,7 @@ def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_
         results["unheard"]["ACC"], results["unheard"]["AUC"], results["unheard"]["ERR"] = eval_metrics(face_unheard, voice_unheard)
         
 
-        if compute_server_scores:
+        if compute_server_scores and not FLAGS.ge2e_voice:
             print('Computing L2 scores for server submission:')
             scores_heard = np.linalg.norm(face_heard - voice_heard, axis=1, keepdims=True)
             scores_unheard = np.linalg.norm(face_unheard - voice_unheard, axis=1, keepdims=True)
@@ -257,6 +260,7 @@ if __name__ == '__main__':
     parser.add_argument('--all_langs', action='store_true', default=False, help='Running all possible language combinations')
     parser.add_argument('--compute_server_scores', action='store_true', default=False, help='Computing L2 scores for server submission')
     parser.add_argument('--debug_prints', action='store_true', default=False, help='Printing extra info helpful for debugging')
+    parser.add_argument('--ge2e_voice', action='store_true', default=False, help='Uses GE2E precomputed voice embeddings')
     
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()
@@ -301,13 +305,19 @@ if __name__ == '__main__':
         if FLAGS.debug_prints:
             print('Loading Heard Language Data')
         test_file_face = f"./pre_extracted_features/{ver}/{heard_lang}/{heard_lang}_faces_test.csv"
-        test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{heard_lang}_voices_test.csv"
+        if FLAGS.ge2e_voice:
+            test_file_voice = f"./GE2E_Embeddings/mavceleb_{ver}_test/{heard_lang}.csv"
+        else:
+            test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{heard_lang}_voices_test.csv"
         face_test_heard, voice_test_heard = read_data(ver, test_file_face, test_file_voice)
         
         if FLAGS.debug_prints:
             print('Loading Unheard Language Data')
         test_file_face = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_faces_unheard_test.csv"
-        test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_voices_unheard_test.csv"
+        if FLAGS.ge2e_voice:
+            test_file_voice = f"./GE2E_Embeddings/mavceleb_{ver}_test/{unheard_lang}.csv"
+        else:
+            test_file_voice = f"./pre_extracted_features/{ver}/{heard_lang}/{unheard_lang}_voices_unheard_test.csv"
         face_test_unheard, voice_test_unheard = read_data(ver, test_file_face, test_file_voice)
         
         results_dictionary[ver][heard_lang] = test(ver,
@@ -323,7 +333,7 @@ if __name__ == '__main__':
     if FLAGS.save_to:
         results_path = FLAGS.save_to
     else:
-        results_path = "_".join(["results", FLAGS.fusion, str(FLAGS.dim_embed), str(FLAGS.mid_att_dim)])+".txt"
+        results_path = "_".join(["results_GE2E_voice_" if FLAGS.ge2e_voice else "results", FLAGS.fusion, str(FLAGS.dim_embed), str(FLAGS.mid_att_dim)])+".txt"
     
     if not results_path.startswith("./results/"):
         results_path = os.path.join("results", results_path)
