@@ -77,7 +77,9 @@ Pre extracted features for reproducing the baseline results can be downloaded [h
 
 Face Embeddings (4096-D) are based on [VGGFace](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/). The model can be downloaded [here](https://drive.google.com/drive/folders/1ct_TXo2x-1tKGAnGYDaC6XzIPRaVN6J-?usp=sharing).
 
-Voice Embeddings (512-D) are achieved with the help of the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code used is released by authors of the paper and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). Pre-trained and fine-tuned on v2 split of MAV-Celeb dataset model can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing).
+Baseline Voice Embeddings (512-D) are achieved with the help of the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code used is released by authors of the paper and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). Pre-trained and fine-tuned on v2 split of MAV-Celeb dataset model can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing).
+
+Alternative: GE2E Voice Embeddings (256-D) are based on open-source implementation by Google. Precomputed .csv feature files can be downloaded [here](https://drive.google.com/drive/folders/1j0tjm_im5UaBKcm_JZXPFaagIJ7SHjlG?usp=sharing). 
 
 
 ## File Hierarchy
@@ -145,6 +147,11 @@ $ python3 evaluate.py --all_langs --save_to ./results/new_results.txt
 ```
 
 If using any of `--dim_embed`,`--mid_att_dim`, `--fusion` for training (as options of `main.py`), then you need to use the same options and values for `evaluate.py`. 
+
+Saved model checkpoints called `best_checkpoint.pth.tar` are the model after the epoch with lowest average training loss.
+
+Although one can specify number of epochs with `--epochs` (by default 50), early stop criterion is also implemented not to overtrain by accident. The training stops if last epoch average loss is larger by specified percentage than best epoch loss achieved previously, e.g.: `--early_stop 0.01` stops the training only if last epoch loss is at least 1% larger than the best (default value is 0.001). 
+
 
 Results .txt file looks like this:
 ```
