@@ -1,0 +1,34 @@
+# big zip and folders with data
+dataset/mavceleb_v1_train/*
+dataset/mavceleb_v1_test/*
+dataset/mavceleb_v2_train/*
+dataset/mavceleb_v2_test/*
+dataset/*.zip
+
+# big .csv files of GE2E voice embeddings
+GE2E_Embeddings/mavceleb_v1_train/*
+GE2E_Embeddings/mavceleb_v1_test/*
+GE2E_Embeddings/mavceleb_v2_train/*
+GE2E_Embeddings/mavceleb_v2_test/*
+
+# ignore intermediate checkpoints
+models/v1/English/*
+!models/v1/English/*.pth.tar
+models/v1/Urdu/*
+!models/v1/Urdu/*.pth.tar
+models/v2/English/*
+!models/v2/English/*.pth.tar
+models/v2/Hindi/*
+!models/v2/Hindi/*.pth.tar
+
+# big csv files
+pre_extracted_features/v1/English/*
+pre_extracted_features/v1/Urdu/*
+pre_extracted_features/v2/English/*
+pre_extracted_features/v2/Hindi/*
+
+# given standard feature extraction scripts
+uttLevelVoiceFeat.py
+vggFaceFeat.py
+vgg_face_weights.h5
+
