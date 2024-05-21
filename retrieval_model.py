@@ -1,6 +1,34 @@
 
 import torch
 import torch.nn as nn
+'''
+Multi-Gated Fusion
+'''
+class MultiGatedFusion(nn.Module):
+    def __init__(self, embed_dim_in, mid_att_dim, emb_dim_out, num_layers=5):
+        super(MultiGatedFusion, self).__init__()
+        self.linear_face = nn.Sequential()
+        self.linear_voice = nn.Sequential()
+        self.final_transform = nn.Sequential()
+        
+        self.attention_layers = nn.ModuleList(
+            [Forward_Block(embed_dim_in * 2, int(mid_att_dim * 2**(num_layers-1))) if i == 0 else 
+             Forward_Block(int(mid_att_dim * 2**(num_layers-i)), int(mid_att_dim * 2**(num_layers-i-1)), 0.5) for i in range(num_layers)
+             ])
+        self.attention_layers.append(Forward_Block(mid_att_dim, emb_dim_out, 0.25))
+        
+
+    def forward(self, face_input, voice_input):
+        face_trans = torch.tanh(self.linear_face(face_input))
+        voice_trans = torch.tanh(self.linear_voice(voice_input))
+        concat = torch.cat((face_input, voice_input), dim=1)
+    
+        attention_out = self.attention_layers[0](concat)
+        for i in range(len(self.attention_layers)-1):
+            attention_out = torch.sigmoid(self.attention_layers[i+1](attention_out))
+
+        out = face_trans * attention_out + (1.0 - attention_out) * voice_trans
+        return out, face_trans, voice_trans
 
 '''
 Gated Multi-Modal Fusion
@@ -89,6 +117,8 @@ class FOP(nn.Module):
             self.fusion_layer = LinearWeightedAvg(dim_embed, dim_embed)
         elif fusion == 'gated':
             self.fusion_layer = GatedFusion(face_feat_dim, voice_feat_dim, dim_embed, mid_att_dim, dim_embed)
+        elif fusion == 'multigated':
+            self.fusion_layer = MultiGatedFusion(dim_embed, mid_att_dim, dim_embed)
         
         self.logits_layer = nn.Linear(dim_embed, n_class)
 

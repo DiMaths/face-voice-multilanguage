@@ -21,7 +21,6 @@ from tqdm import tqdm
 
 from retrieval_model import FOP
 
-
 def read_data(ver, train_lang):
     train_file_face = f"./pre_extracted_features/{ver}/{train_lang}/{train_lang}_faces_train.csv"
     
@@ -113,6 +112,20 @@ def main(ver, train_lang, face_train, voice_train, train_label):
                       {'params' : model.voice_branch.fc1.parameters()},
                       {'params': model.logits_layer.parameters()},
                       {'params' : model.fusion_layer.attention.parameters()}]
+        
+    # =============================================================================
+    #     For MultiGated Fusion
+    # =============================================================================
+    
+    elif FLAGS.fusion == 'multigated':
+    
+        parameters = [
+                      {'params' : model.face_branch.fc1.parameters()},
+                      {'params' : model.voice_branch.fc1.parameters()},
+                      {'params': model.logits_layer.parameters()}]
+        # Include parameters of attention layers
+        for attention_layer in model.fusion_layer.attention_layers:
+            parameters.append({'params': attention_layer.parameters()})
 
     optimizer = optim.Adam(parameters, lr=FLAGS.lr, weight_decay=0.01)
 
@@ -253,7 +266,7 @@ if __name__ == '__main__':
     parser.add_argument('--cuda', action='store_true', default=True, help='CUDA Training')
     parser.add_argument('--lr', type=float, default=1e-2, metavar='LR',
                         help='learning rate (default: 1e-4)')
-    parser.add_argument('--ver', default='v1', type=str, help='Dataset version')
+    parser.add_argument('--version', default='v1', type=str, help='Dataset version')
     parser.add_argument('--train_lang', default='Urdu', type=str, help='Training language')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size for training.')
     parser.add_argument('--epochs', type=int, default=50, help='Max number of epochs to train, number')
@@ -283,7 +296,7 @@ if __name__ == '__main__':
         train_langs = ['English', 'Urdu', 'English', 'Hindi']
     else:
         vers = [FLAGS.version]
-        train_langs = [FLAGS.heard_lang]
+        train_langs = [FLAGS.train_lang]
 
     for i in range(len(vers)):
         ver = vers[i]
