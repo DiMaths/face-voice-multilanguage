@@ -15,11 +15,6 @@ The FAME challenge, in addition, enforces analysis of the impact of multiple of 
   <img src='./readme_images/loss_latex.png' width=99% height=100%>
 </p>
 
-
- 
-Finally, to balance between two approaches a main objective is 
-$\mathcal{L}=\mathcal{L}_{C E}+\alpha \cdot \mathcal{L}_{O C}$.
-
 [The baseline paper](https://ieeexplore.ieee.org/abstract/document/9747704) states that in general $\alpha = 1$ worked best, but it might differ for dataset versions, heard-unheard evaluation modes and simply each individual model.
 
 ## Evaluation Protocol
@@ -110,7 +105,8 @@ We reproduced baseline results (used parameters: `--seed 42 --lr 1e-4 --early_st
 <p align='center'>
   <img src='./readme_images/EER_summary.png' width=100%>
 </p>
-Our take aways:
+
+### Our take aways:
 
 1. v1 version of the dataset is harder than v2 to perform on (left half of plots is significantly worse than right).
 2. GE2E voice embeddings lead to random performance, we suppose that is due to (unlike baseline embeddings) being not fine-tuned.
