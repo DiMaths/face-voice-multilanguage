@@ -75,7 +75,7 @@ def init_weights(m):
 def main(ver, train_lang, face_train, voice_train, train_label):
     
     n_class = 64 if ver == 'v1' else 78
-    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_train.shape[1], voice_train.shape[1], n_class)
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_train.shape[1], voice_train.shape[1], n_class, FLAGS.num_layers)
     model.apply(init_weights)
     
     ce_loss = nn.CrossEntropyLoss().cuda()
@@ -280,6 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('--early_stop_criterion', type=float, default=1e-3,
                         help='Minimum relative epoch loss improvement')
     parser.add_argument('--ge2e_voice', action='store_true', default=False, help='Uses GE2E precomputed voice embeddings')
+    parser.add_argument('--num_layers', type=int, default=3, help='Used only in case of multigated fusion,')
     
     
     print('Training')

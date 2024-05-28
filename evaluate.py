@@ -36,7 +36,7 @@ def read_data(ver, test_file_face, test_file_voice):
 def test(ver, heard_lang, unheard_lang, face_test_heard, voice_test_heard, face_test_unheard, voice_test_unheard, compute_server_scores: bool =False):
     
     n_class = 64 if ver == 'v1' else 78
-    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_test_heard.shape[1], voice_test_heard.shape[1], n_class)
+    model = FOP(FLAGS.cuda, FLAGS.fusion, FLAGS.dim_embed, FLAGS.mid_att_dim, face_test_heard.shape[1], voice_test_heard.shape[1], n_class, FLAGS.num_layers)
     ckpt_path = f"./models/{ver}/{heard_lang}/best_checkpoint{'_GE2E_voice' if FLAGS.ge2e_voice else ''}.pth.tar"
     checkpoint = torch.load(ckpt_path)
     model.load_state_dict(checkpoint['state_dict'])
@@ -261,6 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('--compute_server_scores', action='store_true', default=False, help='Computing L2 scores for server submission')
     parser.add_argument('--debug_prints', action='store_true', default=False, help='Printing extra info helpful for debugging')
     parser.add_argument('--ge2e_voice', action='store_true', default=False, help='Uses GE2E precomputed voice embeddings')
+    parser.add_argument('--num_layers', type=int, default=3, help='Used only in case of multigated fusion,')
     
     global FLAGS
     FLAGS, unparsed = parser.parse_known_args()

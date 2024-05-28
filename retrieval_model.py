@@ -5,17 +5,25 @@ import torch.nn as nn
 Multi-Gated Fusion
 '''
 class MultiGatedFusion(nn.Module):
-    def __init__(self, embed_dim_in, mid_att_dim, emb_dim_out, num_layers=5):
+    def __init__(self, embed_dim_in, mid_att_dim, emb_dim_out, num_layers):
         super(MultiGatedFusion, self).__init__()
         self.linear_face = nn.Sequential()
         self.linear_voice = nn.Sequential()
         self.final_transform = nn.Sequential()
         
         self.attention_layers = nn.ModuleList(
-            [Forward_Block(embed_dim_in * 2, int(mid_att_dim * 2**(num_layers-1))) if i == 0 else 
-             Forward_Block(int(mid_att_dim * 2**(num_layers-i)), int(mid_att_dim * 2**(num_layers-i-1)), 0.5) for i in range(num_layers)
-             ])
-        self.attention_layers.append(Forward_Block(mid_att_dim, emb_dim_out, 0.25))
+            [Forward_Block(embed_dim_in * 2, int(mid_att_dim * 2))]
+            )
+        for i in range(num_layers):
+            self.attention_layers.append(
+                Forward_Block(int(mid_att_dim * 2**(1+i)), int(mid_att_dim * 2**(2+i)))
+                )
+
+        for i in range(num_layers):
+            self.attention_layers.append(
+                Forward_Block(int(mid_att_dim * 2**(num_layers + 1 - i)), int(mid_att_dim * 2**(num_layers + 1- i - 1)))
+                )              
+        self.attention_layers.append(Forward_Block(mid_att_dim * 2, emb_dim_out))
         
 
     def forward(self, face_input, voice_input):
@@ -107,7 +115,7 @@ Main Module
 '''
 
 class FOP(nn.Module):
-    def __init__(self, cuda, fusion, dim_embed, mid_att_dim, face_feat_dim, voice_feat_dim, n_class):
+    def __init__(self, cuda, fusion, dim_embed, mid_att_dim, face_feat_dim, voice_feat_dim, n_class, num_layers):
         super(FOP, self).__init__()
         
         self.voice_branch = EmbedBranch(voice_feat_dim, dim_embed)
@@ -118,7 +126,7 @@ class FOP(nn.Module):
         elif fusion == 'gated':
             self.fusion_layer = GatedFusion(face_feat_dim, voice_feat_dim, dim_embed, mid_att_dim, dim_embed)
         elif fusion == 'multigated':
-            self.fusion_layer = MultiGatedFusion(dim_embed, mid_att_dim, dim_embed)
+            self.fusion_layer = MultiGatedFusion(dim_embed, mid_att_dim, dim_embed, num_layers)
         
         self.logits_layer = nn.Linear(dim_embed, n_class)
 
