@@ -8,10 +8,31 @@ Face-voice association is established in cross-modal verification task, where th
 
 The FAME challenge, in addition, enforces analysis of the impact of multiple of languages on cross-modal verification task.
 
-### Baseline (two-stream approach) visualization
+## Baseline (two-stream) approach
 <p align='center'>
   <img src='./readme_images/baseline_visualization.png' width=99% height=100%>
 </p>
+
+We start with pre-extracted embeddings $\mathbf{x}_{i}^{f} \in \mathbb{R}^{4096}$ into $\hat{\mathbf{u}}_i \in \mathbb{R}^{dim\_embed}$ and $\mathbf{x}_{i}^{v} \in \mathbb{R}^{512}$ into $\hat{\mathbf{v}}_i \in \mathbb{R}^{dim\_embed}$ by using 2 separate fully connected layers with same output dimension. Then perform L2 normalization to obtain $\mathbf{u}_i$ and $\mathbf{v}_i$ respectively.
+
+Fusion of $\mathbf{v}_i$ and $\mathbf{u}_i$ into a fused embedding $\mathbf{l}_i \in \mathbb{R}^{dim\_embed}$ is computed as follows:
+$$\mathbf{l}_{i}=\mathbf{k} \odot \tanh \left(\mathbf{u}_{i}\right)+(1-\mathbf{k}) \odot \tanh \left(\mathbf{v}_{i}\right),$$ 
+where $\mathbf{k} = \sigma\big(F_{a t t}\left(\left[\mathbf{u}_{i}, \mathbf{v}_{i}\right]\right)\big)$ are attention scores and $\odot$ is element-wise multiplication.
+
+Then we learn weights $\mathbf{w}_{1}, \ldots, \mathbf{w}_{num\_ids} \in \mathbb{R}^{dim\_embed}$ for linear classifier $\hat{y}_i = \underset{m \leq num\_ids}{\text{argmax}}(\mathbf{l}_i^T \mathbf{w}_m)$.
+
+### Loss Function
+The loss function is what the suggestion of the baseline mostly consists of:
+
+Since Cross Entropy loss can be used for measuring separability of clusters (groups of samples with same label) and minimizing it enforces clusters to be more dense. 
+$$\mathcal{L}_{C E}=-\log \frac{\exp \left(\mathbf{l}_{i}^{T} \mathbf{w}_{y_i}\right)}{\sum_{j=1}^{num\_ids} \exp \left(\mathbf{l}_{i}^{T} \mathbf{w}_{j}\right)}$$
+On the other hand, using $\mathcal{L}_{C E}$ as general objective implies unbalance in cluster sizes (volumes), which was shown to reduce the efficiency of using the embedding space. To overcome this one might use orthogonal constraints loss $\mathcal{L}_{O C}$, which enforces embeddings of different identities to be as much orthogonal as possible instead of enforcing shrinking of clusters.
+$$\mathcal{L}_{O C}=1-\sum_{i, j \in B, y_{i}=y_{j}}\left\langle\mathbf{l}_{i}, \mathbf{l}_{j}\right\rangle+\left|\sum_{i, j \in B, y_{i} \neq y_{k}}\left\langle\mathbf{l}_{i}, \mathbf{l}_{k}\right\rangle\right| \text{, where } \langle\mathbf{l}_{i}, \mathbf{l}_{j}\rangle=\frac{\mathbf{l}_{i} \cdot \mathbf{l}_{j}}{\left\|\mathbf{l}_{i}\right\|_{2} \cdot\left\|\mathbf{l}_{j}\right\|_{2}}.$$
+ 
+Finally, to balance between two approaches a main objective is 
+$\mathcal{L}=\mathcal{L}_{C E}+\alpha \cdot \mathcal{L}_{O C}$.
+
+[The baseline paper](https://ieeexplore.ieee.org/abstract/document/9747704) states that in general $\alpha = 1$ worked best, but it might differ for dataset versions, heard-unheard evaluation modes and simply each individual model.
 
 ## Evaluation Protocol
 The aim is to study the impact of language on face-voice assoication methods.
@@ -27,6 +48,15 @@ For example in v2 setting language A is English and language B is Hindi, then th
 It is also important to note that the test identities are in any of the cases unheard by the network meaning the test set is disjoint from the train network. 
 
 For example: v2 has 84 identities both having English and Hindi voice samples. But 6 identities are reserved for test set while reamining are used for training the model.
+
+## Pre-extracted features
+Pre extracted features for reproducing the baseline results can be downloaded [here](https://drive.google.com/drive/folders/1LfCxZiAqmsD9sgEMRrJgN5QBr_CL-hzD?usp=sharing).
+
+Face Embeddings (4096-D) are based on [VGGFace](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/). The model can be downloaded [here](https://drive.google.com/drive/folders/1ct_TXo2x-1tKGAnGYDaC6XzIPRaVN6J-?usp=sharing).
+
+Baseline Voice Embeddings (512-D) are achieved with the help of the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code used is released by authors of the paper and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). Pre-trained and fine-tuned on v2 split of MAV-Celeb dataset model can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing).
+
+Alternative: GE2E Voice Embeddings (256-D) are based on open-source implementation by Google. Precomputed .csv feature files can be downloaded [here](https://drive.google.com/drive/folders/1j0tjm_im5UaBKcm_JZXPFaagIJ7SHjlG?usp=sharing).
 
 # Results
 ## Baseline Results from Paper Authors
@@ -98,18 +128,6 @@ Our take aways:
 2. GE2E voice embeddings lead to random performance, we suppose that is due to (unlike baseline embeddings) being not fine-tuned.
 3. Gated fusion in general outperform linear, so future work can focus on trying even more advanced architectures (`--fusion multigated` and `--fusion multi_attention` are coming soon).
 4. Due to low identeties count (154 in total and around 10 reserved for testing) and presence of mixed language usage, sometimes models perform better on unheard language than on the heard one. To confirm this we need larger and more general datasets, but no more data is so far available to us.
-
-
-## Extracted features
-Pre extracted features for reproducing the baseline results can be downloaded [here](https://drive.google.com/drive/folders/1LfCxZiAqmsD9sgEMRrJgN5QBr_CL-hzD?usp=sharing).
-
-Face Embeddings (4096-D) are based on [VGGFace](https://www.robots.ox.ac.uk/~vgg/software/vgg_face/). The model can be downloaded [here](https://drive.google.com/drive/folders/1ct_TXo2x-1tKGAnGYDaC6XzIPRaVN6J-?usp=sharing).
-
-Baseline Voice Embeddings (512-D) are achieved with the help of the method described in [Utterance Level Aggregator](https://arxiv.org/abs/1902.10107). The code used is released by authors of the paper and is [publicly available](https://github.com/WeidiXie/VGG-Speaker-Recognition). Pre-trained and fine-tuned on v2 split of MAV-Celeb dataset model can be downloaded [here](https://drive.google.com/drive/folders/1ykJ3rAPLN0x1n5nVaw3QVPi9vZXlrfe6?usp=sharing).
-
-Alternative: GE2E Voice Embeddings (256-D) are based on open-source implementation by Google. Precomputed .csv feature files can be downloaded [here](https://drive.google.com/drive/folders/1j0tjm_im5UaBKcm_JZXPFaagIJ7SHjlG?usp=sharing). 
-
-
 
 # Setup
 We have used `python 3.6.5` environemnt for our experiments:
