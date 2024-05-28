@@ -11,23 +11,11 @@ The FAME challenge, in addition, enforces analysis of the impact of multiple of 
 ## Baseline (two-stream) approach
 <p align='center'>
   <img src='./readme_images/baseline_visualization.png' width=99% height=100%>
+  <img src='./readme_images/fusion_and_attention_latex.png' width=99% height=100%>
+  <img src='./readme_images/loss_latex.png' width=99% height=100%>
 </p>
 
-We start with pre-extracted embeddings $\mathbf{x}_{i}^{f} \in \mathbb{R}^{4096}$ into $\hat{\mathbf{u}}_i \in \mathbb{R}^{dim\_embed}$ and $\mathbf{x}_{i}^{v} \in \mathbb{R}^{512}$ into $\hat{\mathbf{v}}_i \in \mathbb{R}^{dim\_embed}$ by using 2 separate fully connected layers with same output dimension. Then perform L2 normalization to obtain $\mathbf{u}_i$ and $\mathbf{v}_i$ respectively.
 
-Fusion of $\mathbf{v}_i$ and $\mathbf{u}_i$ into a fused embedding $\mathbf{l}_i \in \mathbb{R}^{dim\_embed}$ is computed as follows:
-$$\mathbf{l}_{i}=\mathbf{k} \odot \tanh \left(\mathbf{u}_{i}\right)+(1-\mathbf{k}) \odot \tanh \left(\mathbf{v}_{i}\right),$$ 
-where $\mathbf{k} = \sigma\big(F_{a t t}\left(\left[\mathbf{u}_{i}, \mathbf{v}_{i}\right]\right)\big)$ are attention scores and $\odot$ is element-wise multiplication.
-
-Then we learn weights $\mathbf{w}_{1}, \ldots, \mathbf{w}_{num\_ids} \in \mathbb{R}^{dim\_embed}$ for linear classifier $\hat{y}_i = \underset{m \leq num\_ids}{\text{argmax}}(\mathbf{l}_i^T \mathbf{w}_m)$.
-
-### Loss Function
-The loss function is what the suggestion of the baseline mostly consists of:
-
-Since Cross Entropy loss can be used for measuring separability of clusters (groups of samples with same label) and minimizing it enforces clusters to be more dense. 
-$$\mathcal{L}_{C E}=-\log \frac{\exp \left(\mathbf{l}_{i}^{T} \mathbf{w}_{y_i}\right)}{\sum_{j=1}^{num\_ids} \exp \left(\mathbf{l}_{i}^{T} \mathbf{w}_{j}\right)}$$
-On the other hand, using $\mathcal{L}_{C E}$ as general objective implies unbalance in cluster sizes (volumes), which was shown to reduce the efficiency of using the embedding space. To overcome this one might use orthogonal constraints loss $\mathcal{L}_{O C}$, which enforces embeddings of different identities to be as much orthogonal as possible instead of enforcing shrinking of clusters.
-$$\mathcal{L}_{O C}=1-\sum_{i, j \in B, y_{i}=y_{j}}\left\langle\mathbf{l}_{i}, \mathbf{l}_{j}\right\rangle+\left|\sum_{i, j \in B, y_{i} \neq y_{k}}\left\langle\mathbf{l}_{i}, \mathbf{l}_{k}\right\rangle\right| \text{, where } \langle\mathbf{l}_{i}, \mathbf{l}_{j}\rangle=\frac{\mathbf{l}_{i} \cdot \mathbf{l}_{j}}{\left\|\mathbf{l}_{i}\right\|_{2} \cdot\left\|\mathbf{l}_{j}\right\|_{2}}.$$
  
 Finally, to balance between two approaches a main objective is 
 $\mathcal{L}=\mathcal{L}_{C E}+\alpha \cdot \mathcal{L}_{O C}$.
