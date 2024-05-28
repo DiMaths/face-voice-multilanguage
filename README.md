@@ -2,11 +2,33 @@
 
 # Baseline
 Baseline code for v2 of MAV-Celeb dataset based on _'Fusion and Orthogonal Projection for Improved Face-Voice Association'_ [{paper}](https://ieeexplore.ieee.org/abstract/document/9747704) [{paper code}](https://github.com/msaadsaeed/FOP) [{baseline repo}](https://github.com/mavceleb/mavceleb_baseline.git)
+
 ## Task
 Face-voice association is established in cross-modal verification task, where the goal is to verify if, in a given single sample with both a face and voice, both belong to the same identity. 
 
-This FAME challenge, in addition, enforces analysis of the impact of multiple of languages on cross-modal verification task.
+The FAME challenge, in addition, enforces analysis of the impact of multiple of languages on cross-modal verification task.
 
+### Baseline (two-stream approach) visualization
+<p align='center'>
+  <img src='./readme_images/baseline_visualization.png' width=99% height=100%>
+</p>
+
+## Evaluation Protocol
+The aim is to study the impact of language on face-voice assoication methods.
+Model X trained on language A is tested both on the same language A and unheard language B. Similarly a model Y trained on language B is tested both on same language B and unheard language A.
+
+For example in v2 setting language A is English and language B is Hindi, then the whole pipeline looks as shown in figures below. 
+<br>
+<p align='center'>
+  <img src='./readme_images/eng_heard.JPG' width=49% height=50%>
+  <img src='./readme_images/hin_heard.JPG' width=49% height=50%>
+</p>
+
+It is also important to note that the test identities are in any of the cases unheard by the network meaning the test set is disjoint from the train network. 
+
+For example: v2 has 84 identities both having English and Hindi voice samples. But 6 identities are reserved for test set while reamining are used for training the model.
+
+# Results
 ## Baseline Results from Paper Authors
 <table border="1" align='center'>
   <tr>
@@ -55,21 +77,27 @@ This FAME challenge, in addition, enforces analysis of the impact of multiple of
   
 </table>
 
-## Evaluation Protocol
-The aim is to study the impact of language on face-voice assoication methods.
-Model X trained on language A is tested both on the same language A and unheard language B. Similarly a model Y trained on language B is tested both on same language B and unheard language A.
+## Our results
+We reproduced baseline results (used parameters: `--seed 42 --lr 1e-4 --early_stop_criterion=-0.01 --alpha 1`) and tried another voice embeddings received with the help of Generalized End-to-End Loss model (same params + `--ge2e_voice`).
 
-For example in v2 setting language A is English and language B is Hindi, then the whole pipeline looks as shown in figures below. 
-
-
-It is also important to note that the test identities are in any of the cases unheard by the network meaning the test set is disjoint from the train network. 
-
-For example: v2 has 84 identities both having English and Hindi voice samples. But 6 identities are reserved for test set while reamining are used for training the model.<br>
-
+ Equal Error Rate (EER) was used as main evaluation metric (if unfamiliar, see [here](https://jimmy-shen.medium.com/roc-receiver-operating-characteristic-and-eer-equal-error-rate-ac5a576fae38)).
 <p align='center'>
-  <img src='./readme_images/eng_heard.JPG' width=49% height=50%>
-  <img src='./readme_images/hin_heard.JPG' width=49% height=50%>
+  <img src='./readme_images/EER_detailed.png' width=100%>
 </p>
+  Here models are named in python f-string format like the following:
+  
+  {Type of audio embeddings used} {fusion type} {embedding size}-{dim_attention}
+
+  Averaging among models for a clearer big picture:
+<p align='center'>
+  <img src='./readme_images/EER_summary.png' width=100%>
+</p>
+Our take aways:
+
+1. v1 version of the dataset is harder than v2 to perform on (left half of plots is significantly worse than right).
+2. GE2E voice embeddings lead to random performance, we suppose that is due to (unlike baseline embeddings) being not fine-tuned.
+3. Gated fusion in general outperform linear, so future work can focus on trying even more advanced architectures (`--fusion multigated` and `--fusion multi_attention` are coming soon).
+4. Due to low identeties count (154 in total and around 10 reserved for testing) and presence of mixed language usage, sometimes models perform better on unheard language than on the heard one. To confirm this we need larger and more general datasets, but no more data is so far available to us.
 
 
 ## Extracted features
@@ -82,7 +110,19 @@ Baseline Voice Embeddings (512-D) are achieved with the help of the method descr
 Alternative: GE2E Voice Embeddings (256-D) are based on open-source implementation by Google. Precomputed .csv feature files can be downloaded [here](https://drive.google.com/drive/folders/1j0tjm_im5UaBKcm_JZXPFaagIJ7SHjlG?usp=sharing). 
 
 
-## File Hierarchy
+
+# Setup
+We have used `python 3.6.5` environemnt for our experiments:
+```
+pip install -r requirements.txt
+```
+
+To install PyTorch with GPU support:
+```
+conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10.2 -c pytorch
+```
+
+### File Hierarchy
 ```
 ├── main.py
 ├── evaluate.py
@@ -127,17 +167,6 @@ Alternative: GE2E Voice Embeddings (256-D) are based on open-source implementati
 │ ├── ... # 1 file for each heard/unheard combination
 ```
 
-# Setup
-We have used `python 3.6.5` environemnt for our experiments:
-```
-pip install -r requirements.txt
-```
-
-To install PyTorch with GPU support:
-```
-conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10.2 -c pytorch
-```
-
 # Run
 To train and get scores for all combinations of heard/unheard languages use the following:
 
@@ -146,7 +175,7 @@ $ python3 main.py --train_all_langs
 $ python3 evaluate.py --all_langs --save_to ./results/new_results.txt
 ```
 
-If using any of `--dim_embed`,`--mid_att_dim`, `--fusion` for training (as options of `main.py`), then you need to use the same options and values for `evaluate.py`. 
+If using any of `--dim_embed`,`--mid_att_dim`, `--fusion`, `--ge2e_voice`, `--num_layers`(in case of multigated fusion) for training (as options of `main.py`), then you need to use the same options and values for `evaluate.py`. 
 
 Saved model checkpoints called `best_checkpoint.pth.tar` are the model after the epoch with lowest average training loss.
 
